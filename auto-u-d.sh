@@ -28,4 +28,5 @@ do
 	    sudo systemctl reload nginx
 	    echo "Changes in: ${URL}" 
 	fi	
+	sleep 5
 done
