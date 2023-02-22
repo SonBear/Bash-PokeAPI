@@ -27,6 +27,6 @@ do
 	    git pull origin master >/dev/null &
 	    sudo systemctl reload nginx
 	    echo "Changes in: ${URL}" 
-	fi	
+	fi
 	sleep 5
 done
