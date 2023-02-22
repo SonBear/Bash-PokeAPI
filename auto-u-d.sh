@@ -1,19 +1,31 @@
 #!/bin/sh
 
+# Start and wait ngrok config
+ngrok http 80 >/dev/null &
+until $(curl --output /dev/null --silent --head --fail http://localhost:4045); do
+    echo 'waiting...'
+    sleep 5
+done
+echo 'ngrok init'
+
+# Get public URL
+URL=$(curl -sS http://localhost:4045/api/tunnels | jq -r '.tunnels[0].public_url')
+echo $URL
+
+# Waiting changes from remote repository
+cd /var/www/html
 while :
 do
-	cd /var/www/html
-	git remote update
+	git remote update >/dev/null & 
+	
 	LOCAL=$(git rev-parse @)
 	REMOTE=$(git rev-parse origin/master)
 	BASE=$(git merge-base @ origin/master)
-
-	if [ $LOCAL = $REMOTE ]; then
-	    echo "Up-to-date"
-        elif [ $LOCAL = $BASE ]; then
-	    git pull origin master
+	
+	if ([ $LOCAL != $REMOTE ] && [ $LOCAL = $BASE ]); # has diff from remote  
+	then
+	    git pull origin master >/dev/null &
 	    sudo systemctl reload nginx
-	    ngrok http 80 --log=stdout >/dev/null &
-	    URL=$(curl -sS http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+	    echo "Changes in: ${URL}" 
 	fi	
 done
